@@ -1,0 +1,103 @@
+package com.fulfilment.application.monolith.stores;
+
+import java.util.List;
+
+import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
+
+@Path("store")
+@ApplicationScoped
+@Produces("application/json")
+@Consumes("application/json")
+public class StoreResource {
+
+  @Inject StoreService storeService;
+
+  private static final Logger LOGGER = Logger.getLogger(StoreResource.class.getName());
+
+  @GET
+  public List<Store> get() {
+    return storeService.listAll();
+  }
+
+  @GET
+  @Path("{id}")
+  public Store getSingle(Long id) {
+    return storeService.getSingle(id);
+  }
+
+  @POST
+  @Transactional
+  public Response create(Store store) {
+    Store created = storeService.create(store);
+    return Response.ok(created).status(201).build();
+  }
+
+  @PUT
+  @Path("{id}")
+  @Transactional
+  public Store update(Long id, Store updatedStore) {
+    return storeService.update(id, updatedStore);
+  }
+
+  @PATCH
+  @Path("{id}")
+  @Transactional
+  public Store patch(Long id, Store updatedStore) {
+    return storeService.patch(id, updatedStore);
+  }
+
+  @DELETE
+  @Path("{id}")
+  @Transactional
+  public Response delete(Long id) {
+    storeService.delete(id);
+    return Response.status(204).build();
+  }
+
+  // Notification after commit is handled by StoreService
+
+  @Provider
+  public static class ErrorMapper implements ExceptionMapper<Exception> {
+
+    @Inject ObjectMapper objectMapper;
+
+    @Override
+    public Response toResponse(Exception exception) {
+      LOGGER.error("Failed to handle request", exception);
+
+      int code = 500;
+      if (exception instanceof WebApplicationException) {
+        code = ((WebApplicationException) exception).getResponse().getStatus();
+      }
+
+      ObjectNode exceptionJson = objectMapper.createObjectNode();
+      exceptionJson.put("exceptionType", exception.getClass().getName());
+      exceptionJson.put("code", code);
+
+      if (exception.getMessage() != null) {
+        exceptionJson.put("error", exception.getMessage());
+      }
+
+      return Response.status(code).entity(exceptionJson).build();
+    }
+  }
+}
