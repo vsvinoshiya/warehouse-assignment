@@ -83,7 +83,13 @@ This separation makes business logic testable in isolation from the Quarkus runt
 - `src/test/java/` — unit tests (designed to run without a Quarkus runtime)
 - `src/test/resources/application.properties` — H2 test database settings
 
+## Assignment Status
+### Tasks
 
+#### 1. Location (Must have)  - Completed :heavy_check_mark:
 
+#### 2. Store (Must have)  - Completed :heavy_check_mark:
 
+#### 3. Warehouse (Must have) - Completed :heavy_check_mark:
 
+#### BONUS task (nice to have) - Completed :heavy_check_mark:
